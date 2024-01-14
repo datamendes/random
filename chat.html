@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Steam Chat Room</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1f1f1f, #484848);
+            color: #d1d1d1;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+        #messages {
+            list-style-type: none;
+            overflow-y: auto;
+            flex-grow: 1;
+            width: calc(90% - 220px);
+            max-width: 800px;
+            margin-top: 20px;
+            background-color: #282c34;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        #messages li {
+            padding: 5px 10px;
+            background-color: #3a3f4b;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            border-left: 3px solid #0fba72;
+        }
+        #form {
+            width: calc(90% - 220px);
+            max-width: 800px;
+            margin: 10px 0;
+            display: flex;
+        }
+        #input {
+            flex-grow: 1;
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #333;
+            background: #222;
+            color: #d1d1d1;
+        }
+        #form button {
+            width: 100px;
+            background: #0fba72;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+        }
+        #form button:hover {
+            background: #0da060;
+        }
+        #online-users {
+            width: 200px;
+            height: calc(100vh - 20px);
+            position: fixed;
+            right: 10px;
+            top: 10px;
+            background-color: #20232a;
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+            overflow-y: auto;
+        }
+        a {
+            color: #4fa9ff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <ul id="messages"></ul>
+    <div id="online-users">Online Users:</div>
+    <form id="form" action="">
+        <input id="input" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function () {
+            var socket = io();
+
+            $('#form').submit(function(e) {
+                e.preventDefault();
+                var message = $('#input').val();
+                if (message.trim() !== '') {
+                    socket.emit('chat message', message);
+                    $('#input').val('');
+                }
+            });
+
+            socket.on('chat message', function(data) {
+                const steamProfileUrl = `https://steamcommunity.com/profiles/${data.steamId}`;
+                $('#messages').append(
+                    $('<li>').html(`<a href="${steamProfileUrl}" target="_blank">${data.user}</a>: ${data.message}`)
+                );
+                $('#messages').scrollTop($('#messages')[0].scrollHeight);
+            });
+
+            socket.on('online users', function(users) {
+                $('#online-users').html('Online Users:<br>' + users.join('<br>'));
+            });
+        });
+    </script>
+</body>
+</html>
